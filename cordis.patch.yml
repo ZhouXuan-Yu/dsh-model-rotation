@@ -1,0 +1,9 @@
+# dsh-model-rotation bundle patch — 插入「模型轮询」plugin entry
+# 安装：dsh plugin --profile web add <本目录>
+# 轮询链的具体内容由插件 Config schema 的默认值提供（见 index.js 的 DEFAULT_CHAIN），
+# 想改顺序就改「设置 → 插件 → dsh-model-rotation」里的 chain，或在本文件 config 下写 chain 覆盖。
+- insert:
+    - id: model-rotation
+      name: 'dsh-model-rotation'
+      config:
+        enabled: true

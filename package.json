@@ -1,0 +1,96 @@
+{
+  "name": "dsh-model-rotation",
+  "version": "0.8.0",
+  "description": "Model rotation with source grouping for DeepSeek Harness: order models from any provider (agy / Codex / DeepSeek APIs / built-in) manually or automatically, pack model + reasoning effort into presets, fail over automatically when quota runs out (including a step-level auto-resend), pin an Auto entry at the top of the composer model picker, and show which model actually answered in the session header.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "dsh-plugin",
+    "dsh",
+    "deepseek-harness",
+    "deepseek",
+    "llm",
+    "model-rotation",
+    "model-router",
+    "failover",
+    "fallback",
+    "quota",
+    "auto-switch",
+    "reasoning-effort",
+    "preset",
+    "antigravity",
+    "gemini",
+    "claude",
+    "openai-codex",
+    "codex"
+  ],
+  "main": "./index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./client": "./client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-commands": "*",
+    "@deepseek-ai/dsh-llm": "*",
+    "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/schemastery": "*",
+    "react": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-commands": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "assets"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZhouXuan-Yu/dsh-model-rotation.git"
+  },
+  "homepage": "https://github.com/ZhouXuan-Yu/dsh-model-rotation#readme",
+  "bugs": {
+    "url": "https://github.com/ZhouXuan-Yu/dsh-model-rotation/issues"
+  },
+  "author": "ZhouXuan-Yu"
+}
