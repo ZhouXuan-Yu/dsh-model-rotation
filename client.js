@@ -849,16 +849,46 @@ window.__ModuleLoader__.load({
 
     /** 各 provider 的显示名：优先用宿主 /catalog 里 provider 自报的名字（不写死任何厂家/型号） */
     const LABELS = { data: {}, at: 0, inflight: null }
+    /**
+     * /catalog 的形状可能是新版（顶层 labels 映射）或旧版（只有 groups[].providers[]），
+     * 这里两种都认，避免宿主版本不同就丢标签 —— 标签只做兜底，不参与任何逻辑。
+     */
+    const labelsFromCatalog = (data) => {
+      const out = {}
+      if (!data || typeof data !== 'object') return out
+      if (data.labels && typeof data.labels === 'object') {
+        for (const id of Object.keys(data.labels)) {
+          const name = asStr(data.labels[id])
+          if (id && name) out[id] = name
+        }
+      }
+      const groups = Array.isArray(data.groups) ? data.groups : []
+      for (const group of groups) {
+        if (!group || typeof group !== 'object') continue
+        const providers = Array.isArray(group.providers) ? group.providers : []
+        for (const provider of providers) {
+          if (!provider || typeof provider !== 'object') continue
+          const id = asStr(provider.id)
+          if (!id || out[id]) continue
+          const name = asStr(provider.name) || asStr(provider.displayName)
+          if (name) out[id] = name
+        }
+        const groupId = asStr(group.id)
+        if (groupId && !out[groupId]) {
+          const groupName = asStr(group.label) || asStr(group.name)
+          if (groupName) out[groupId] = groupName
+        }
+      }
+      return out
+    }
     function loadProviderLabels() {
       if (LABELS.inflight) return
-      if (Date.now() - LABELS.at < 60000) return
+      if (Date.now() - LABELS.at < 60000 && Object.keys(LABELS.data).length > 0) return
       LABELS.inflight = getJson(CATALOG_URL)
         .then((data) => {
-          const labels = data && data.labels
-          if (labels && typeof labels === 'object') {
-            LABELS.data = labels
-            LABELS.at = Date.now()
-          }
+          const map = labelsFromCatalog(data)
+          LABELS.data = map
+          LABELS.at = Date.now()
         })
         .catch(() => {})
         .finally(() => {
@@ -906,7 +936,7 @@ window.__ModuleLoader__.load({
       '.mrot-search{display:flex;padding:2px 3px 6px}',
       '.mrot-search input{flex:1;min-width:0;padding:5px 7px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary);font-size:12px;outline:none}',
       '.mrot-list{display:flex;flex-direction:column;overflow-y:auto;min-height:0}',
-      '.mrot-group{padding:7px 7px 3px;font-size:11px;font-weight:600;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.mrot-group{padding:8px 7px 3px;font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--dsw-alias-label-primary);opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
       '.mrot-row{display:flex;align-items:center;gap:6px;min-height:32px;padding:4px 7px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary);font-size:13px;text-align:left;cursor:pointer}',
       '.mrot-row:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}',
       '.mrot-row[data-on="true"]{background:var(--dsw-alias-bg-layer-2)}',
@@ -1177,7 +1207,8 @@ window.__ModuleLoader__.load({
             )
           }
           for (const group of filteredGroups) {
-            rows.push(h('div', { key: 'g:' + group.id, className: 'mrot-group' }, group.name || group.id))
+            const groupText = group.name || providerLabel(group.id) || group.id || '模型'
+            rows.push(h('div', { key: 'g:' + group.id, className: 'mrot-group', title: groupText }, groupText))
             for (const model of group.models) {
               const on = current !== null && current.provider === group.id && current.model === model.id
               rows.push(
