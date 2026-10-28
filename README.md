@@ -18,6 +18,20 @@
 
 > 截图由插件真实组件离线渲染（数据为示例）：composer 菜单 / 会话头徽章 / 设置页。
 
+## English (short)
+
+`dsh-model-rotation` is a [DeepSeek Harness](https://github.com/ZhouXuan-Yu/dsh-model-rotation) plugin that turns
+your LLM subscriptions into one **ordered, self-healing model chain**.
+
+- **One virtual model** `rotation/auto` — select it once and every turn uses your chain.
+- **Grouped by source** — agy account pool (Gemini / Claude / GPT-OSS), Codex subscription, DeepSeek API keys, built-in DeepSeek; filter models per group and pick one.
+- **Order it your way** — manual order (`order` / `move` / `up` / `down`) or automatic order by measured success rate & latency.
+- **Quota-aware failover** — hard failures (quota, auth, region `ELIGIBILITY`) get a long cooldown; the next attempt simply uses the next model, and the whole step is re-sent automatically (`autoResend`).
+- **Presets** — bundle *model + reasoning effort* (e.g. `Gemini 3.8 high`, `Codex GPT-6.1-Sol high`) and switch with one click.
+- **See who answered** — composer picker, session-header badge and the settings page all show the model that actually produced the reply.
+
+Install (DSH desktop, local clone): `node scripts/install.mjs` → restart the app → Settings → 模型轮询.
+
 给 DeepSeek Harness 用的**有序多来源模型轮询 + 排序 + 预设**插件。
 
 - 一条可排序的链（默认就是「Gemini 3.8 high → Codex GPT-6.1 Sol high → xiao-DeepSeek Flash → 内置 DeepSeek Flash」），
