@@ -57,14 +57,36 @@ dsh plugin --profile web add dsh-model-rotation   # 仅 pnpm 层，市场安装�
 
 ## 4. 提交到市场索引
 
-市场索引是中心化的 JSON 清单（插件市场网页从远端读取）。典型流程：
+桌面端「插件市场」的列表**不读 npm**，只读精选目录
+[awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin)
+（市场里 `dshmarket` 的 `lib/regions.js` 把 `https://awesome-dsh-plugin.com/plugins.json`
+作为官方目录地址），所以发了 npm 也不会自动上架。实际流程（已按此提交）：
 
-1. 找到市场的索引仓库/提交入口（`awesome-dsh-plugin` 系列或其 README 指向的仓库）；
-2. fork → 在索引文件里新增一条：包名 `dsh-model-rotation`、显示名、一句话简介、分类
-   （建议 `Models / Routing`）、`repo` 链接、作者；
-3. 提 PR，按对方要求附上：截图（设置页 + composer 菜单）、支持版本、是否含 client 半、
-   是否需要额外 provider 插件（agy-link / codex-subscription / llm-pi-ai 等）；
-4. 等审核合并后，用户在市场的搜索里即可看到。
+1. 仓库加 `dsh-plugin` topic：`gh repo edit <owner>/<repo> --add-topic dsh-plugin`；
+2. 仓库根放 `screenshots.json`（相对路径数组，1–8 张，市场详情页用）——本仓库已放
+   `assets/shot-composer.png` / `assets/shot-settings.png` / `assets/shot-badge.png`；
+3. fork `awesome-dsh-plugin/awesome-dsh-plugin`，新增**一个**文件
+   `data/plugins/<owner>__<repo>.yml`：
+
+   ```yaml
+   url: https://github.com/ZhouXuan-Yu/dsh-model-rotation
+   name: ZhouXuan-Yu/dsh-model-rotation
+   category: model
+   description:
+     en: '...one line, ends with a period, no marketing...'
+     zh: '...'
+   ```
+
+   `data/plugins/*.yml` 是唯一数据源，两个 README 由脚本生成，**不要手改**；
+   `category` 合法值里有 `model`；描述含 `: ` 必须加引号；
+4. 提 PR（本仓库对应 **PR #10029**），CI 会跑 `PR check`（格式/lint/README 重生成）
+   和 `Submission gate`（`dsh.bundle`、仓库**创建满 1 天**、代码真实可用）；
+5. 合并后站点重建，市场里即可搜到。仓库年龄不足时 gate 会红，但**会自动重跑**，
+   不需要重复提交或关闭重开。
+
+> 已确认的硬性门槛：`package.json` 必须有 `dsh.bundle`（只声明 `dsh.client` 会被拒）；
+> 仓库创建满 1 天（无法作弊，只能等）；描述会被维护者拿去和代码核对，不要夸大。
+
 
 ## 5. 上架文案（可直接复用）
 
