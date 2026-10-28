@@ -351,6 +351,17 @@ $env:ELECTRON_RUN_AS_NODE='1'
   `/rotation status`；`/rotation groups`（应看到 4~6 个来源分组）；`/rotation probe`（逐档实测，含 Codex 与内置 DeepSeek）；
   `/rotation test`。
 
+## 维护性：不写死容易变的地方
+
+- **分组名不写死**：`agy 账号池` / `Codex 订阅` 这类名字只是**别名**，运行时优先用 provider 自己上报的名字
+  （`ctx.llm.listProviders()`），取不到才退回别名、再退回 provider id。以后你换插件、加新的 API provider，
+  甚至插件改版把名字改了，分组都会自动跟着显示，不用改代码。
+- **排序不写死**：模型分组顺序、模型清单、思考强度集合全部来自目录（`listProviders` / `listModels` /
+  `resolveModelInfo`），没有内置任何厂家或型号表参与逻辑；`fast`/`coding`/`quality` 预设只是**模板**，
+  随时可以 `preset save` 覆盖或 `reset-all` 丢掉。
+- **界面不写死 DOM**：模型选择器是「接官方数据、只替换入口组件」的方式实现的（拿到同一个 per-session
+  模型目录），官方改版时如果接不上会自动退回官方选择器，同时上报一条 `client-report`，不会白屏。
+
 ## 已知限制
 
 - 冷却不区分「同一 provider 的不同账号」——账号级轮询由 `dsh-agy-link` 自己做

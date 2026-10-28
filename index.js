@@ -83,22 +83,20 @@ function groupIdOf(cand) {
   return asString(cand?.provider) || 'unknown'
 }
 
-/** 分组显示名；已知 provider 用中文名，未知 provider 用 provider 名 */
+/** 分组显示名：**优先用 provider 自己报的名字**，取不到才退回已知别名，最后退回 id
+ *  （别名只是「好认一点」的补充，不参与任何逻辑；provider 换代/改名都不会影响功能） */
 function groupLabelOf(cand, providerNames) {
   const id = groupIdOf(cand)
-  if (providerNames && providerNames instanceof Map && providerNames.has(id)) {
-    const live = providerNames.get(id)
-    const known = KNOWN_GROUPS[id]
-    return known ? `${known.label} · ${live}` : live
-  }
+  const live = providerNames instanceof Map ? asString(providerNames.get(id)) : ''
+  if (live) return live
   const known = KNOWN_GROUPS[id]
   return known ? known.label : id
 }
 
 /** 分组短名（去掉括号里的说明），给状态行做前缀用 */
-function groupShortLabelOf(cand) {
-  const label = groupLabelOf(cand)
-  return label.split('（')[0].trim()
+function groupShortLabelOf(cand, providerNames) {
+  const label = groupLabelOf(cand, providerNames)
+  return label.split('（')[0].split(' · ')[0].trim()
 }
 
 /**
@@ -863,7 +861,7 @@ export function apply(ctx, entryConfig) {
             trail.push({
               key: candidateKey(cand),
               label: candidateLabel(cand, index),
-              group: groupShortLabelOf(cand),
+              group: groupShortLabelOf(cand, providerNamesNow()),
               provider: cand.provider,
               model: cand.model,
               reasoningEffort: cand.reasoningEffort || '',
@@ -881,8 +879,8 @@ export function apply(ctx, entryConfig) {
               key: candidateKey(cand),
               label: candidateLabel(cand, index),
               group: groupIdOf(cand),
-              groupLabel: groupLabelOf(cand),
-              groupShort: groupShortLabelOf(cand),
+              groupLabel: groupLabelOf(cand, providerNamesNow()),
+              groupShort: groupShortLabelOf(cand, providerNamesNow()),
               reasoningEffort: delegation.reasoningEffort || '',
               latencyMs,
               elapsedMs: Date.now() - runStartedAt,
@@ -911,7 +909,7 @@ export function apply(ctx, entryConfig) {
           trail.push({
             key: candidateKey(cand),
             label: candidateLabel(cand, index),
-            group: groupShortLabelOf(cand),
+            group: groupShortLabelOf(cand, providerNamesNow()),
             provider: cand.provider,
             model: cand.model,
             ok: false,
@@ -935,7 +933,7 @@ export function apply(ctx, entryConfig) {
         trail.push({
           key: candidateKey(cand),
           label: candidateLabel(cand, index),
-          group: groupShortLabelOf(cand),
+          group: groupShortLabelOf(cand, providerNamesNow()),
           provider: cand.provider,
           model: cand.model,
           ok: false,
@@ -1006,8 +1004,8 @@ export function apply(ctx, entryConfig) {
               key: `${provider}/${options.model}`,
               label: options.model,
               group: groupIdOf(cand),
-              groupLabel: groupLabelOf(cand),
-              groupShort: groupShortLabelOf(cand),
+              groupLabel: groupLabelOf(cand, providerNamesNow()),
+              groupShort: groupShortLabelOf(cand, providerNamesNow()),
               reasoningEffort: options.reasoningEffort || '',
               latencyMs,
               elapsedMs: Date.now() - startedAt,
@@ -1104,7 +1102,7 @@ export function apply(ctx, entryConfig) {
       let mark = '✅'
       if (cand.enabled === false) mark = '⚪'
       else if (cd && cd.until > now) mark = '⏸️'
-      const bits = [`[${groupShortLabelOf(cand)}] ${candidateLabel(cand, i)}`, `· ${candidateKey(cand)}`]
+      const bits = [`[${groupShortLabelOf(cand, providerNamesNow())}] ${candidateLabel(cand, i)}`, `· ${candidateKey(cand)}`]
       if (cand.enabled === false) bits.push('· 已停用')
       else if (cd && cd.until > now) bits.push(`· 冷却 ${fmtRemaining(cd.until - now)}（${cd.code}）`)
       if (entry.attempts > 0) {
@@ -1219,12 +1217,12 @@ export function apply(ctx, entryConfig) {
     if (failure) {
       const code = errCode(failure)
       const hint = failureHint(code)
-      return `  ❌ [${groupShortLabelOf(cand)}] ${candidateLabel(cand)} — ${code}：${errMessage(failure)}（${ms}ms）${
+      return `  ❌ [${groupShortLabelOf(cand, providerNamesNow())}] ${candidateLabel(cand)} — ${code}：${errMessage(failure)}（${ms}ms）${
         hint ? `\n       ↳ ${hint}` : ''
       }`
     }
     const preview = text.trim().replace(/\s+/g, ' ').slice(0, 40)
-    return `  ✅ [${groupShortLabelOf(cand)}] ${candidateLabel(cand)} — ${ms}ms${preview ? ` · ${preview}` : ''}`
+    return `  ✅ [${groupShortLabelOf(cand, providerNamesNow())}] ${candidateLabel(cand)} — ${ms}ms${preview ? ` · ${preview}` : ''}`
   }
 
   const probeAll = async (prompt, signal, onlyIndex, onlyGroup) => {
@@ -1232,7 +1230,7 @@ export function apply(ctx, entryConfig) {
     let targets
     let label = ''
     if (onlyGroup) {
-      targets = chain.filter((entry) => groupIdOf(entry) === onlyGroup || groupShortLabelOf(entry) === onlyGroup)
+      targets = chain.filter((entry) => groupIdOf(entry) === onlyGroup || groupShortLabelOf(entry, providerNamesNow()) === onlyGroup)
       label = `分组 ${onlyGroup} `
     } else if (onlyIndex == null) {
       targets = chain.filter((entry) => entry.enabled !== false)
@@ -1846,8 +1844,8 @@ export function apply(ctx, entryConfig) {
         provider: entry.provider,
         model: entry.model,
         group: groupIdOf(entry),
-        groupLabel: groupLabelOf(entry),
-        groupShort: groupShortLabelOf(entry),
+        groupLabel: groupLabelOf(entry, providerNamesNow()),
+        groupShort: groupShortLabelOf(entry, providerNamesNow()),
         key: candidateKey(entry),
         label: entry.label || '',
         display: candidateLabel(entry),
@@ -1879,8 +1877,8 @@ export function apply(ctx, entryConfig) {
         const members = rows.filter((row) => row.group === id)
         return {
           id,
-          label: groupLabelOf(members[0]),
-          short: groupShortLabelOf(members[0]),
+          label: groupLabelOf(members[0], providerNamesNow()),
+          short: groupShortLabelOf(members[0], providerNamesNow()),
           count: members.length,
           keys: members.map((row) => row.key),
         }
@@ -1948,9 +1946,19 @@ export function apply(ctx, entryConfig) {
    */
   let catalogCache = { at: 0, data: null }
   const CATALOG_TTL_MS = 60 * 1000
+  /** 上一次 catalog 里各 provider 自报的名字（Map），拿不到就返回 undefined，调用方自行退回 id */
+  const providerNamesNow = () => {
+    const labels = catalogCache && catalogCache.data && catalogCache.data.labels
+    return labels ? new Map(Object.entries(labels)) : undefined
+  }
   const buildCatalog = async (signal) => {
     if (catalogCache.data && Date.now() - catalogCache.at < CATALOG_TTL_MS) return catalogCache.data
     const list = (await ctx.llm.listProviders()) ?? []
+    const providerNames = new Map(
+      (Array.isArray(list) ? list : [])
+        .filter((provider) => provider?.id)
+        .map((provider) => [provider.id, asString(provider.name) || asString(provider.displayName) || provider.id]),
+    )
     const groups = new Map()
     for (const provider of Array.isArray(list) ? list : []) {
       if (!provider?.id) continue
@@ -1958,17 +1966,18 @@ export function apply(ctx, entryConfig) {
       if (id === cfg.virtualProviderId) continue
       const known = KNOWN_GROUPS[id]
       if (!groups.has(id)) {
-        const label = known ? known.label : id
+        const label = groupLabelOf({ provider: id }, providerNames)
         groups.set(id, {
           id,
           label,
-          short: label.split('（')[0].trim(),
+          alias: known ? known.label : '',
+          short: label.split('（')[0].split(' · ')[0].trim(),
           order: known?.order ?? 999,
           providers: [],
         })
       }
       const bucket = groups.get(id)
-      const entry = { id, name: provider.name ?? id, models: [] }
+      const entry = { id, name: asString(provider.name) || asString(provider.displayName) || id, models: [] }
       try {
         const models = (await ctx.llm.listModels(id)) ?? []
         for (const model of (Array.isArray(models) ? models : []).slice(0, 40)) {
@@ -1988,6 +1997,7 @@ export function apply(ctx, entryConfig) {
     }
     const data = {
       ok: true,
+      labels: Object.fromEntries(providerNames),
       groups: [...groups.values()].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id)),
       cachedAt: Date.now(),
     }

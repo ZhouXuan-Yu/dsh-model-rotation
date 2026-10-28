@@ -1,6 +1,6 @@
 {
   "name": "dsh-model-rotation",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Model rotation with source grouping for DeepSeek Harness: order models from any provider (agy / Codex / DeepSeek APIs / built-in) manually or automatically, pack model + reasoning effort into presets, fail over automatically when quota runs out (including a step-level auto-resend), pin an Auto entry at the top of the composer model picker, and show which model actually answered in the session header.",
   "type": "module",
   "license": "MIT",
@@ -78,8 +78,7 @@
     "cordis.patch.yml",
     "README.md",
     "CHANGELOG.md",
-    "LICENSE",
-    "assets"
+    "LICENSE"
   ],
   "engines": {
     "node": ">=20.0.0"

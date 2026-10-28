@@ -2,6 +2,17 @@
 
 本文件记录 `dsh-model-rotation` 的对外变更。版本号遵循 `MAJOR.MINOR.PATCH`。
 
+## 0.8.1
+
+**兼容性 / 维护成本**
+
+- 分组名不再依赖内置的 provider→中文名映射：优先用 `ctx.llm.listProviders()` 里 provider 自报的名字，
+  取不到才退回别名、最后退回 provider id（模型选择器、设置页、会话头徽章、`/rotation status` 一致）；
+- 客户端不再自己复刻官方分组排序（`deepseek-account` 优先那类硬编码），直接用官方模型目录给出的顺序；
+- 目录数据结构做了宽松归一（`id/provider/key`、`models/items`、`name/label/title` 都能读），
+  宿主或 provider 插件改字段名时不会整块空白，最差退化成显示 provider id；
+- 设置页 `/catalog` 增加 `labels` 字段（provider 显示名映射），供客户端动态取用。
+
 ## 0.8.0
 
 **界面（便于上手）**

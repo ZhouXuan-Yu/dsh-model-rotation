@@ -847,10 +847,44 @@ window.__ModuleLoader__.load({
         .catch(() => {})
     }
 
-    /** 官方排序：DeepSeek 账号第一、DeepSeek 官方第二，其余保持目录顺序 */
-    const PINNED_GROUP_ORDER = { 'deepseek-account': 0, 'deepseek-official': 1 }
-    const groupRank = (group) => (group && PINNED_GROUP_ORDER[group.id] !== undefined ? PINNED_GROUP_ORDER[group.id] : 2)
-    const orderGroups = (groups) => [...groups].sort((a, b) => groupRank(a) - groupRank(b))
+    /** 各 provider 的显示名：优先用宿主 /catalog 里 provider 自报的名字（不写死任何厂家/型号） */
+    const LABELS = { data: {}, at: 0, inflight: null }
+    function loadProviderLabels() {
+      if (LABELS.inflight) return
+      if (Date.now() - LABELS.at < 60000) return
+      LABELS.inflight = getJson(CATALOG_URL)
+        .then((data) => {
+          const labels = data && data.labels
+          if (labels && typeof labels === 'object') {
+            LABELS.data = labels
+            LABELS.at = Date.now()
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          LABELS.inflight = null
+        })
+    }
+    const providerLabel = (id) => (id && LABELS.data[id]) || ''
+
+    /** 目录里的 group 形状可能随宿主版本变化，这里只做宽松归一（取不到就留空，不做假设） */
+    const asStr = (value) => (typeof value === 'string' ? value : value === undefined || value === null ? '' : String(value))
+    const normalizeModel = (model) => ({
+      id: asStr(model && (model.id ?? model.model)),
+      name: asStr(model && (model.name ?? model.label)),
+      reasoning: (model && model.reasoning) || undefined,
+    })
+    const normalizeGroup = (group) => {
+      const id = asStr(group && (group.id ?? group.provider ?? group.key))
+      const name = asStr(group && (group.name ?? group.label ?? group.title))
+      const models = Array.isArray(group && group.models)
+        ? group.models
+        : Array.isArray(group && group.items)
+          ? group.items
+          : []
+      return { id, name: name || providerLabel(id) || id, models: models.map(normalizeModel) }
+    }
+    const normalizeGroups = (groups) => (Array.isArray(groups) ? groups.map(normalizeGroup) : [])
 
     const matchModels = (models, query) => {
       const q = String(query == null ? '' : query).trim().toLowerCase()
@@ -922,7 +956,7 @@ window.__ModuleLoader__.load({
       const triggerRef = useRef(null)
       const menuRef = useRef(null)
 
-      const groups = useMemo(() => orderGroups((state && state.groups) || []), [state])
+      const groups = useMemo(() => normalizeGroups(state && state.groups), [state])
       const current = (state && state.current) || null
       const pending = state ? state.pending : null
       const busy = pending !== null && pending !== undefined
@@ -1002,6 +1036,7 @@ window.__ModuleLoader__.load({
       if (!available) return null
 
       const showMenu = () => {
+        loadProviderLabels()
         setError('')
         setQuery('')
         setPane('root')
@@ -1385,6 +1420,7 @@ window.__ModuleLoader__.load({
       ensureComposerCss()
       ensureAnswerCss()
       ensureAutoTarget()
+      loadProviderLabels()
       report('apply', {
         hasSlots: !!(ctx && ctx.slots),
         hasInject: typeof ctx?.inject === 'function',
