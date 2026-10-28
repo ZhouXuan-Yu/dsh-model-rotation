@@ -87,3 +87,18 @@ dsh plugin --profile web add dsh-model-rotation   # 仅 pnpm 层，市场安装�
 3. `/rotation status`、`/rotation probe`、`/rotation test` 正常；
 4. 会话头徽章出现且在直连模型时显示「直连」；
 5. 卸载（插件页移除）后模型选择器恢复官方实现（我们只是遮蔽，不修改官方代码）。
+## 发布（维护者）
+
+已发布：https://www.npmjs.com/package/dsh-model-rotation
+
+一键发布（打包 → git 提交/打标签/推送 → npm publish → registry 校验）：
+
+```powershell
+node scripts/publish.mjs --test                 # 跑三套测试后发布当前版本
+node scripts/publish.mjs --bump patch --test    # 先升版本再发布
+node scripts/publish.mjs --dry-run              # 只检查与打包预览
+```
+
+DSH 里也能直接用同名 skill：`dsh-plugin-publish`（`~/.agents/skills/dsh-plugin-publish/SKILL.md`）。
+
+凭据：npm token 存在 `%USERPROFILE%\.npmrc` 的 `//registry.npmjs.org/:_authToken=`，权限需为「阅读与写入（发布与分期）」。
