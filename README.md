@@ -329,7 +329,14 @@ deepseek-official/deepseek-flash          内置 DeepSeek：DeepSeek Flash（兜
 
 ## 安装
 
-**已发布到 npm**：<https://www.npmjs.com/package/dsh-model-rotation>（`npm i -g dsh-model-rotation` 可取到包，但本机 DSH 仍需下面的 generation 通道才会真正加载）。
+**已在 DSH 插件市场上架**：精选目录条目 <https://awesome-dsh-plugin.com/p/ZhouXuan-Yu/dsh-model-rotation/>
+→ 桌面端「插件」页搜 `dsh-model-rotation`（分类「模型」）即可一键安装；条目里的安装命令是：
+
+```powershell
+dsh plugin --profile web add dsh-model-rotation
+```
+
+**也已发布到 npm**：<https://www.npmjs.com/package/dsh-model-rotation>（`npm i -g dsh-model-rotation` 可取到包，但本机 DSH 仍需下面的 generation 通道才会真正加载）。
 
 **不能**用 `dsh plugin --profile web add <目录>`：那条命令只是 `pnpm` 的薄包装，
 不维护 `dsh.profile.bundles`，装进去不会被加载。用桌面端的「generation」安装通道（仓库自带脚本）：
